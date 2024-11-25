@@ -16,6 +16,7 @@ package org.littletonrobotics.junction;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.List;
+import java.util.ArrayList;
 
 import edu.wpi.first.hal.DriverStationJNI;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
@@ -41,6 +42,7 @@ public class LoggedRobot extends IterativeRobotBase {
   private final long periodUs;
   private long nextCycleUs = 0;
   private final GcStatsCollector gcStatsCollector = new GcStatsCollector();
+  private final ArrayList<Runnable> periodicRunnables = new ArrayList<>();
 
   private boolean useTiming = true;
 
@@ -61,6 +63,11 @@ public class LoggedRobot extends IterativeRobotBase {
 
     HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_AdvantageKit);
   }
+
+  /** Adds a function that is run periodically. */
+  public void addPeriodic(Runnable toRun) {
+		periodicRunnables.add(toRun);
+	}
 
   @Override
   @SuppressWarnings("NoFinalizer")
@@ -113,6 +120,7 @@ public class LoggedRobot extends IterativeRobotBase {
       long periodicBeforeStart = Logger.getRealTimestamp();
       Logger.periodicBeforeUser();
       long userCodeStart = Logger.getRealTimestamp();
+      periodicRunnables.forEach(Runnable::run);
       loopFunc();
       long userCodeEnd = Logger.getRealTimestamp();
 
